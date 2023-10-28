@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ModMetaData>
+  <packageId>Cryonyx.DiverseFactionGenetics</packageId>
+  <name>Diverse Faction Genetics</name>
+  <author>Cryonyx</author>
+  <description>Allows Customization of the genetic generation algorithm.</description>
+  <supportedVersions>
+    <li>1.4</li>
+  </supportedVersions>
+</ModMetaData>
