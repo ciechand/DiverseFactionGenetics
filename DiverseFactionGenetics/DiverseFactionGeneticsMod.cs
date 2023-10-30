@@ -17,9 +17,8 @@ namespace DiverseFactionGenetics
 
         public override void DoSettingsWindowContents(Rect inRect)
         {
-            base.DoSettingsWindowContents(inRect);
             Settings.DoSettingsWindowContents(inRect);
-
+            base.DoSettingsWindowContents(inRect);
         }
 
         public override string SettingsCategory() => "DiverseFactionGenetics";

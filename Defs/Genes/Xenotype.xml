@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+    <XenotypeDef>
+        <defName>GeneratedXenotype</defName>
+        <label>Generated Xenotype</label>
+        <description>A placeholder Xenotype to display for factions when generation of xenotypes with random genes is enabled.</description>
+        <descriptionShort>A placeholder Xenotype to display for factions when generation of xenotypes with random genes is enabled.</descriptionShort>
+        <iconPath>UI/Icons/Xenotypes/Other</iconPath>
+        <inheritable>False</inheritable>
+        <genes>
+        </genes>
+    </XenotypeDef>
+
+</Defs>

@@ -18,9 +18,9 @@ namespace DiverseFactionGenetics
         public static TraitGenSettings tgSetting = TraitGenSettings.Default;
         public enum TraitGenSettings { Default, OnlyForced, None }
 
-        public List<DFGGenePoolSettingsSection> genePools;
+        public List<DFGGenePoolSettingsSection> genePools = new List<DFGGenePoolSettingsSection>();
 
-        public static List<CustomXenotype> cachedXenos;
+        public static List<CustomXenotype> cachedXenos = null;
         public static List<CustomXenotype> allCustomXenos
         {
             get {
@@ -36,6 +36,9 @@ namespace DiverseFactionGenetics
                             {
                                 cachedXenos.Add(xenotype);
                             }
+                            else {
+                                Log.Error($"Failed to load xenotype: {item.Name}");
+                            }
                         }, skipOnMismatch: true);
                     }
                 }
@@ -43,28 +46,29 @@ namespace DiverseFactionGenetics
             }
         }
 
+        //Display members
+        private static float generalSettingsHeight = 70f;
+        private static float rulesHeight = 150f+20f;
+
         public DiverseFactionGeneticsSettings() {
-            genePools = new List<DFGGenePoolSettingsSection>
-            {
-                new DFGGenePoolSettingsSection("General")
-            };
         }
 
         public override void ExposeData()
         {
             base.ExposeData();
             Scribe_Values.Look<TraitGenSettings>(ref tgSetting, "tgSetting", defaultValue: TraitGenSettings.Default);
+            Scribe_Collections.Look<DFGGenePoolSettingsSection>(ref genePools,"genePools", LookMode.Deep);
         }
 
         public void DoSettingsWindowContents(Rect inRect)
         {
             bool flag = optionsViewRectHeight > inRect.height;
-            Rect viewRect = new Rect(inRect.x, inRect.y, inRect.width - (flag ? 26f : 0f), optionsViewRectHeight);
+            Rect viewRect = new Rect(inRect.x, inRect.y, inRect.width - (flag ? 26f : 0f), generalSettingsHeight+(genePools.Count*rulesHeight));
             Widgets.BeginScrollView(inRect, ref settingsScrollPosition, viewRect);
-            Listing_Standard listingStandard = new Listing_Standard();
-            Rect rect = new Rect(viewRect.x, viewRect.y, viewRect.width, 999999f);
-            listingStandard.Begin(rect);
-            if (listingStandard.ButtonTextLabeled("Trait Generation Setting", tgSetting.ToString()))
+            Listing_Standard SettingsView = new Listing_Standard();
+            Rect rect = new Rect(viewRect.x, viewRect.y, viewRect.width, generalSettingsHeight);
+            SettingsView.Begin(rect);
+            if (SettingsView.ButtonTextLabeled("Trait Generation Setting", tgSetting.ToString()))
             {
                 List<FloatMenuOption> fm = new List<FloatMenuOption>();
                 foreach (TraitGenSettings setting in Enum.GetValues(typeof(TraitGenSettings)))
@@ -73,28 +77,37 @@ namespace DiverseFactionGenetics
                 }
                 Find.WindowStack.Add(new FloatMenu(fm));
             }
+            SettingsView.GapLine();
             Texture2D addTex = ContentFinder<Texture2D>.Get("UI/Buttons/Plus");
-            if (listingStandard.ButtonImage(addTex, 20, 20)) {
-                genePools.Add(new DFGGenePoolSettingsSection("Please Rename"));
+            if (SettingsView.ButtonImage(addTex, 20, 20)) {
+                //This needs FIXED
+                genePools.Add(new DFGGenePoolSettingsSection());
+                Find.WindowStack.Add(new Dialog_CreateGenePoolSettingsSection(genePools[genePools.Count-1]));
             }
-            AddAllGenePools(ref listingStandard);
-            optionsViewRectHeight = listingStandard.CurHeight;
-            listingStandard.End();
+            generalSettingsHeight = SettingsView.CurHeight;
+            if (genePools.Any(g => g.referenceXenotypeName == null))
+            {
+                SettingsView.Gap(-22f);
+                SettingsView.Indent(24f);
+                SettingsView.Label("Please Make Sure All Rules have Assigned Xenotype Pools");
+                SettingsView.Outdent(24f);
+            }
+            SettingsView.End();
+            SettingsView.Begin(new Rect(viewRect.x, viewRect.y+generalSettingsHeight, viewRect.width, 999999f));
+            AddAllGenePools(ref SettingsView);
+            SettingsView.End();
+            optionsViewRectHeight = SettingsView.CurHeight;
             Widgets.EndScrollView();
         }
 
-        public void AddAllGenePools(ref Listing_Standard ls) {
-            foreach (DFGGenePoolSettingsSection s in genePools.ToList()) {
-                s.AddSettingsBox(ref ls);
+        public void AddAllGenePools(ref Listing_Standard SettingsView) {
+            foreach (var (s, index) in genePools.ToList().Select((item, index) => (item, index))) {
+                s.AddSettingsBox(ref SettingsView, index);
+                SettingsView.Gap();
             }
         }
 
         public static void removeGenePool(DFGGenePoolSettingsSection item) {
-            if (item.genePoolName == "General")
-            {
-                //Add an error here explaining that general cannot be removed.
-                return;
-            }
             LoadedModManager.GetMod<DiverseFactionGeneticsMod>().Settings.genePools.Remove(item);
         }
     }
