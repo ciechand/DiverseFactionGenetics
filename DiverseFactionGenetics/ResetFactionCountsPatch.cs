@@ -15,18 +15,10 @@ namespace DiverseFactionGenetics
             var generatedXeno = DefDatabase<XenotypeDef>.AllDefs.FirstOrDefault(xd => xd.defName == "GeneratedXenotype");
             foreach (FactionDef f in ___factions) {
                 if (f.humanlikeFaction){
-                    if (f.xenotypeSet != null)
-                    {
-                        var xenoChanceList = Traverse.Create(f.xenotypeSet).Field("xenotypeChances").GetValue<List<XenotypeChance>>();
-                        xenoChanceList.Clear();
-                        xenoChanceList.Add(new XenotypeChance(generatedXeno, 100f));
-                    }
-                    else {
-                        f.xenotypeSet = new XenotypeSet();
-                        var xenoChanceList = Traverse.Create(f.xenotypeSet).Field("xenotypeChances").GetValue<List<XenotypeChance>>();
-                        xenoChanceList.Clear();
-                        xenoChanceList.Add(new XenotypeChance(generatedXeno, 100f));
-                    }
+                    f.xenotypeSet = new XenotypeSet();
+                    var xenoChanceList = Traverse.Create(f.xenotypeSet).Field("xenotypeChances").GetValue<List<XenotypeChance>>();
+                    xenoChanceList.Clear();
+                    xenoChanceList.Add(new XenotypeChance(generatedXeno, 100f));
                 }
             }
         }

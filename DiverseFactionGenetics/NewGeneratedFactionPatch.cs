@@ -1,40 +1,29 @@
 using HarmonyLib;
+using Verse;
 using RimWorld;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Verse;
+using RimWorld.Planet;
+using System;
 
 namespace DiverseFactionGenetics
 {
-    [HarmonyPatch(typeof(PawnGenerator), "GenerateGenes")]
-    public class GenerateGenesPatch
+    [HarmonyPatch(typeof(FactionGenerator), nameof(FactionGenerator.NewGeneratedFaction))]
+    public class NewGeneratedFactionPatch
     {
-        private static DiverseFactionGeneticsSettings settings;
-
-        [HarmonyPrefix]
-        public static bool PreFix(Pawn pawn, XenotypeDef xenotype, PawnGenerationRequest request) {
-            settings = LoadedModManager.GetMod<DiverseFactionGeneticsMod>().Settings;
-            if (settings.genePools.Count == 0)
-            {
-                return true;
-            }
-            return false;
-        }
+        private static DiverseFactionGeneticsSettings settings => LoadedModManager.GetMod<DiverseFactionGeneticsMod>().Settings;
 
         [HarmonyPostfix]
-        public static void PostFix(Pawn pawn, XenotypeDef xenotype, PawnGenerationRequest request)
+        public static void Postfix(ref Faction __result)
         {
-            if (pawn.genes == null)
-            {
+            if (!__result.def.humanlikeFaction) {
                 return;
             }
-            settings = LoadedModManager.GetMod<DiverseFactionGeneticsMod>().Settings;
-            if (settings.genePools.Count >= 0 && request.ForcedCustomXenotype == null && request.AllowedDevelopmentalStages != DevelopmentalStage.Newborn)
+            if (__result.def.xenotypeSet != null)
             {
+                var xenoChanceList = Traverse.Create(__result.def.xenotypeSet).Field("xenotypeChances").GetValue<List<XenotypeChance>>();
                 XenotypeDef generatedXenoDef = null;
-                if (request.Faction == null || request.Faction.def == null || request.Faction.IsPlayer)
+                if (settings.genePools.Count >= 0)
                 {
                     generatedXenoDef = new XenotypeDef();
                     foreach (var pool in settings.genePools)
@@ -63,46 +52,37 @@ namespace DiverseFactionGenetics
                         }
                     }
                     generatedXenoDef.defName = GeneUtility.GenerateXenotypeNameFromGenes(generatedXenoDef.genes);
+                    Log.Error(generatedXenoDef.defName);
                     generatedXenoDef.label = generatedXenoDef.defName;
                     generatedXenoDef.inheritable = true;
                     generatedXenoDef.iconPath = DefDatabase<XenotypeIconDef>.AllDefs.RandomElement().texPath;
                     generatedXenoDef.descriptionShort = "A XenoDef with genes based on the rules defined in settings.";
-
-                    if (DefDatabase<XenotypeDef>.AllDefs.Any(x => x.defName == generatedXenoDef.defName))
-                    {
+                }
+                if (generatedXenoDef != null && generatedXenoDef.ConfigErrors().Count() == 0)
+                {
+                    if (DefDatabase<XenotypeDef>.AllDefs.Any(x => x.defName == generatedXenoDef.defName)) {
                         generatedXenoDef.defName += "+";
                         generatedXenoDef.label = generatedXenoDef.defName;
                     }
                     DefDatabase<XenotypeDef>.Add(generatedXenoDef);
+                    xenoChanceList.Clear();
+                    xenoChanceList.Add(new XenotypeChance(generatedXenoDef, 100f));
+                    Traverse.Create(__result.def.xenotypeSet).Field("xenotypeChances").SetValue(xenoChanceList);
 
-                    pawn.genes.SetXenotype(generatedXenoDef);
                 }
-                else
-                {
-                    if (request.Faction.def.xenotypeSet == null)
-                    {
-                        Log.Warning($"Faction def set is of type: {request.Faction.def.defName}");
-                        Log.Warning("XenotypeSet is null");
-                        return;
+                else {
+                    foreach (string error in generatedXenoDef.ConfigErrors()) { 
+                        Log.Error(error);
                     }
-                    if (request.Faction.def.xenotypeSet[0] == null)
+                    if (generatedXenoDef == null)
                     {
-                        Log.Warning("FIrst index of Xenotype Set is null");
-                        return;
+                        Log.Error("GeneratedXenoDef is Null... HOW?!");
                     }
-                    if (request.Faction.def.xenotypeSet[0].xenotype == null)
-                    {
-                        Log.Warning("Sexnotype is null");
-                        return;
-                    }
-                    if (request.Faction.def.xenotypeSet[0].xenotype.genes == null)
-                    {
-                        Log.Warning("Genes are null");
-                        return;
-                    }
-                    pawn.genes.SetXenotype(request.Faction.def.xenotypeSet[0].xenotype);
+                    xenoChanceList.Clear();
+                    xenoChanceList.Add(new XenotypeChance(XenotypeDefOf.Baseliner, 100));
+                    Traverse.Create(__result.def.xenotypeSet).Field("xenotypeChances").SetValue(xenoChanceList);
                 }
-               
+                
             }
         }
     }

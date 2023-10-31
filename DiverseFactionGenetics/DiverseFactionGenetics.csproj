@@ -39,7 +39,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CleanupPawnTraitsPatch.cs" />
-    <Compile Include="PreWorldGeneratePatch.cs" />
+    <Compile Include="NewGeneratedFactionPatch.cs" />
     <Compile Include="ResetFactionCountsPatch.cs" />
     <Compile Include="Dialog_CustomXenotypeEditor.cs" />
     <Compile Include="DFGGenePoolSettingsSection.cs" />
