@@ -92,9 +92,6 @@ namespace DiverseFactionGenetics
                         Find.WindowStack.Add(new Dialog_CustomXenotypeEditor(CachedXenotype, -1, delegate { 
                             DiverseFactionGeneticsSettings.cachedXenos = null;
                             cachedXenotype = null;
-                            chancePerGene = 0;
-                            chanceBuffer = "0";
-                            numberOfGenesToGenerate = new IntRange();
                         }));
                     }) 
                 };

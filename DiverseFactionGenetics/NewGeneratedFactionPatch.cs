@@ -19,71 +19,81 @@ namespace DiverseFactionGenetics
             if (!__result.def.humanlikeFaction) {
                 return;
             }
-            if (__result.def.xenotypeSet != null)
+            //var xenoChanceList = Traverse.Create(__result.def.xenotypeSet).Field("xenotypeChances").GetValue<List<XenotypeChance>>();
+            XenotypeDef generatedXenoDef = null;
+            if (settings.genePools.Count >= 0)
             {
-                var xenoChanceList = Traverse.Create(__result.def.xenotypeSet).Field("xenotypeChances").GetValue<List<XenotypeChance>>();
-                XenotypeDef generatedXenoDef = null;
-                if (settings.genePools.Count >= 0)
+                generatedXenoDef = new XenotypeDef();
+                foreach (var pool in settings.genePools)
                 {
-                    generatedXenoDef = new XenotypeDef();
-                    foreach (var pool in settings.genePools)
+                    if (pool.CachedXenotype != null)
                     {
-                        if (pool.CachedXenotype != null)
+                        List<GeneDef> copyOfPool = pool.CachedXenotype.genes.ToList();
+                        var genesToGen = Rand.RangeInclusive(pool.numberOfGenesToGenerate.min, pool.numberOfGenesToGenerate.max);
+                        for (int i = 1; i <= genesToGen; i++)
                         {
-                            List<GeneDef> copyOfPool = pool.CachedXenotype.genes.ToList();
-                            var genesToGen = Rand.RangeInclusive(pool.numberOfGenesToGenerate.min, pool.numberOfGenesToGenerate.max);
-                            for (int i = 1; i <= genesToGen; i++)
+                            GeneDef gene = copyOfPool[Rand.Range(0, copyOfPool.Count)];
+                            if (Rand.Range(0, 101) <= pool.chancePerGene)
                             {
-                                GeneDef gene = copyOfPool[Rand.Range(0, copyOfPool.Count)];
-                                if (Rand.Range(0, 101) <= pool.chancePerGene)
+                                bool conflict = false;
+                                foreach (GeneDef g in generatedXenoDef.genes) {
+                                    if (gene.ConflictsWith(g)) { 
+                                        conflict = true;
+                                    }
+                                }
+                                if (!conflict)
                                 {
                                     generatedXenoDef.genes.Add(gene);
-                                    copyOfPool.Remove(gene);
-                                    if (gene.prerequisite != null && !generatedXenoDef.genes.Any(g => gene.prerequisite == g))
+                                }
+                                copyOfPool.Remove(gene);
+                                if (gene.prerequisite != null && !generatedXenoDef.genes.Any(g => gene.prerequisite == g))
+                                {
+                                    generatedXenoDef.genes.Add(gene.prerequisite);
+                                    if (gene.prerequisite.prerequisite != null)
                                     {
-                                        generatedXenoDef.genes.Add(gene.prerequisite);
-                                        if (gene.prerequisite.prerequisite != null)
-                                        {
-                                            Log.Error("PreRequisite has Prerequisite, gonna need to recursively check...... this could be a problem.....");
-                                        }
+                                        Log.Error("PreRequisite has Prerequisite, gonna need to recursively check...... this could be a problem.....");
                                     }
                                 }
                             }
                         }
                     }
-                    generatedXenoDef.defName = GeneUtility.GenerateXenotypeNameFromGenes(generatedXenoDef.genes);
-                    Log.Error(generatedXenoDef.defName);
-                    generatedXenoDef.label = generatedXenoDef.defName;
-                    generatedXenoDef.inheritable = true;
-                    generatedXenoDef.iconPath = DefDatabase<XenotypeIconDef>.AllDefs.RandomElement().texPath;
-                    generatedXenoDef.descriptionShort = "A XenoDef with genes based on the rules defined in settings.";
                 }
-                if (generatedXenoDef != null && generatedXenoDef.ConfigErrors().Count() == 0)
-                {
-                    if (DefDatabase<XenotypeDef>.AllDefs.Any(x => x.defName == generatedXenoDef.defName)) {
-                        generatedXenoDef.defName += "+";
-                        generatedXenoDef.label = generatedXenoDef.defName;
-                    }
-                    DefDatabase<XenotypeDef>.Add(generatedXenoDef);
-                    xenoChanceList.Clear();
-                    xenoChanceList.Add(new XenotypeChance(generatedXenoDef, 100f));
-                    Traverse.Create(__result.def.xenotypeSet).Field("xenotypeChances").SetValue(xenoChanceList);
-
-                }
-                else {
-                    foreach (string error in generatedXenoDef.ConfigErrors()) { 
-                        Log.Error(error);
-                    }
-                    if (generatedXenoDef == null)
-                    {
-                        Log.Error("GeneratedXenoDef is Null... HOW?!");
-                    }
-                    xenoChanceList.Clear();
-                    xenoChanceList.Add(new XenotypeChance(XenotypeDefOf.Baseliner, 100));
-                    Traverse.Create(__result.def.xenotypeSet).Field("xenotypeChances").SetValue(xenoChanceList);
-                }
-                
+                generatedXenoDef.defName = GeneUtility.GenerateXenotypeNameFromGenes(generatedXenoDef.genes);
+                //Log.Error(__result.Name+" : "+generatedXenoDef.defName);
+                generatedXenoDef.label = generatedXenoDef.defName;
+                generatedXenoDef.inheritable = true;
+                generatedXenoDef.iconPath = DefDatabase<XenotypeIconDef>.AllDefs.RandomElement().texPath;
+                generatedXenoDef.descriptionShort = "A XenoDef with genes based on the rules defined in settings.";
             }
+            var xenoChanceList = new List<XenotypeChance>();
+            if (generatedXenoDef != null && generatedXenoDef.ConfigErrors().Count() == 0)
+            {
+                if (DefDatabase<XenotypeDef>.AllDefs.Any(x => x.defName == generatedXenoDef.defName)) {
+                    generatedXenoDef.defName += "+";
+                    generatedXenoDef.label = generatedXenoDef.defName;
+                }
+                DefDatabase<XenotypeDef>.Add(generatedXenoDef);
+                xenoChanceList.Clear();
+                xenoChanceList.Add(new XenotypeChance(generatedXenoDef, 100f));
+                __result.def.xenotypeSet = new XenotypeSet();
+                Traverse.Create(__result.def.xenotypeSet).Field("xenotypeChances").SetValue(xenoChanceList);
+
+            }
+            else {
+                foreach (string error in generatedXenoDef.ConfigErrors()) { 
+                    Log.Error(error);
+                }
+                if (generatedXenoDef == null)
+                {
+                    Log.Error("GeneratedXenoDef is Null... HOW?!");
+                }
+                xenoChanceList.Clear();
+                xenoChanceList.Add(new XenotypeChance(XenotypeDefOf.Baseliner, 100));
+                __result.def.xenotypeSet = new XenotypeSet();
+                Traverse.Create(__result.def.xenotypeSet).Field("xenotypeChances").SetValue(xenoChanceList);
+            }
+                
         }
+        
     }
 }

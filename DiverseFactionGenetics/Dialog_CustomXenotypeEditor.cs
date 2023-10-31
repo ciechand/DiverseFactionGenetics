@@ -27,6 +27,7 @@ namespace DiverseFactionGenetics
 
             ignoreRestrictions = true;
             closeOnAccept = true;
+            closeOnClickedOutside = false;
             this.callback = callback;
 
         }
@@ -52,10 +53,6 @@ namespace DiverseFactionGenetics
             if (text != null && text.Trim().Length == 0)
             {
                 Messages.Message("XenotypeNameCannotBeEmpty".Translate(), MessageTypeDefOf.RejectInput, historical: false);
-                return false;
-            }
-            if (!WithinAcceptableBiostatLimits(showMessage: true))
-            {
                 return false;
             }
             if (!SelectedGenes.Any())

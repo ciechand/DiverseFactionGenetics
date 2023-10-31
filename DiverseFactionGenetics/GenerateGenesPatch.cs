@@ -48,7 +48,18 @@ namespace DiverseFactionGenetics
                                 GeneDef gene = copyOfPool[Rand.Range(0, copyOfPool.Count)];
                                 if (Rand.Range(0, 101) <= pool.chancePerGene)
                                 {
-                                    generatedXenoDef.genes.Add(gene);
+                                    bool conflict = false;
+                                    foreach (GeneDef g in generatedXenoDef.genes)
+                                    {
+                                        if (gene.ConflictsWith(g))
+                                        {
+                                            conflict = true;
+                                        }
+                                    }
+                                    if (!conflict)
+                                    {
+                                        generatedXenoDef.genes.Add(gene);
+                                    }
                                     copyOfPool.Remove(gene);
                                     if (gene.prerequisite != null && !generatedXenoDef.genes.Any(g => gene.prerequisite == g))
                                     {
