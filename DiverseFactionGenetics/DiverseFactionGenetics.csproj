@@ -38,16 +38,19 @@
     <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CleanupPawnTraitsPatch.cs" />
+    <Compile Include="GenerateTraitsPatch.cs" />
+    <Compile Include="DiverseFactionGeneticsUtilities.cs" />
+    <Compile Include="DiverseFactionGenetics_FactionAssociations.cs" />
     <Compile Include="NewGeneratedFactionPatch.cs" />
-    <Compile Include="ResetFactionCountsPatch.cs" />
     <Compile Include="Dialog_CustomXenotypeEditor.cs" />
     <Compile Include="DFGGenePoolSettingsSection.cs" />
     <Compile Include="Dialog_CreateGenePoolSettingsSection.cs" />
     <Compile Include="DiverseFactionGeneticsMod.cs" />
     <Compile Include="DiverseFactionGeneticsSettings.cs" />
     <Compile Include="GenerateGenesPatch.cs" />
+    <Compile Include="Page_CreateWorldParamsPatch.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Shutdown_Patch.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Krafs.Rimworld.Ref">

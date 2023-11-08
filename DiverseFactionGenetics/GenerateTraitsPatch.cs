@@ -10,7 +10,7 @@ using Verse;
 namespace DiverseFactionGenetics
 {
     [HarmonyPatch(typeof(PawnGenerator), "GenerateTraits")]
-    public class CleanupPawnTraitsPatch
+    public class GenerateTraitsPatch
     {
         [HarmonyPrefix]
         public static bool Prefix(Pawn pawn, PawnGenerationRequest request)

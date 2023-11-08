@@ -81,8 +81,9 @@ namespace DiverseFactionGenetics
             Texture2D addTex = ContentFinder<Texture2D>.Get("UI/Buttons/Plus");
             if (SettingsView.ButtonImage(addTex, 20, 20)) {
                 //This needs FIXED
-                genePools.Add(new DFGGenePoolSettingsSection());
-                Find.WindowStack.Add(new Dialog_CreateGenePoolSettingsSection(genePools[genePools.Count-1]));
+                var tempGenePool = new DFGGenePoolSettingsSection();
+                Find.WindowStack.Add(new Dialog_CreateGenePoolSettingsSection(ref tempGenePool));
+                genePools.Add(tempGenePool);
             }
             generalSettingsHeight = SettingsView.CurHeight;
             if (genePools.Any(g => g.referenceXenotypeName == null))

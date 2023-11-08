@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using RimWorld.Planet;
 using System;
+using UnityEngine.UIElements;
 
 namespace DiverseFactionGenetics
 {
@@ -13,70 +14,25 @@ namespace DiverseFactionGenetics
     {
         private static DiverseFactionGeneticsSettings settings => LoadedModManager.GetMod<DiverseFactionGeneticsMod>().Settings;
 
-        [HarmonyPostfix]
-        public static void Postfix(ref Faction __result)
+        [HarmonyPrefix]
+        public static void Prefix(ref FactionGeneratorParms parms)
         {
-            if (!__result.def.humanlikeFaction) {
+            if (!parms.factionDef.humanlikeFaction) {
                 return;
             }
-            //var xenoChanceList = Traverse.Create(__result.def.xenotypeSet).Field("xenotypeChances").GetValue<List<XenotypeChance>>();
+            //var xenoChanceList = Traverse.Create(parms.factionDef.xenotypeSet).Field("xenotypeChances").GetValue<List<XenotypeChance>>();
             XenotypeDef generatedXenoDef = null;
             if (settings.genePools.Count >= 0)
             {
-                generatedXenoDef = new XenotypeDef();
-                foreach (var pool in settings.genePools)
-                {
-                    if (pool.CachedXenotype != null)
-                    {
-                        List<GeneDef> copyOfPool = pool.CachedXenotype.genes.ToList();
-                        var genesToGen = Rand.RangeInclusive(pool.numberOfGenesToGenerate.min, pool.numberOfGenesToGenerate.max);
-                        for (int i = 1; i <= genesToGen; i++)
-                        {
-                            GeneDef gene = copyOfPool[Rand.Range(0, copyOfPool.Count)];
-                            if (Rand.Range(0, 101) <= pool.chancePerGene)
-                            {
-                                bool conflict = false;
-                                foreach (GeneDef g in generatedXenoDef.genes) {
-                                    if (gene.ConflictsWith(g)) { 
-                                        conflict = true;
-                                    }
-                                }
-                                if (!conflict)
-                                {
-                                    generatedXenoDef.genes.Add(gene);
-                                }
-                                copyOfPool.Remove(gene);
-                                if (gene.prerequisite != null && !generatedXenoDef.genes.Any(g => gene.prerequisite == g))
-                                {
-                                    generatedXenoDef.genes.Add(gene.prerequisite);
-                                    if (gene.prerequisite.prerequisite != null)
-                                    {
-                                        Log.Error("PreRequisite has Prerequisite, gonna need to recursively check...... this could be a problem.....");
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                generatedXenoDef.defName = GeneUtility.GenerateXenotypeNameFromGenes(generatedXenoDef.genes);
-                //Log.Error(__result.Name+" : "+generatedXenoDef.defName);
-                generatedXenoDef.label = generatedXenoDef.defName;
-                generatedXenoDef.inheritable = true;
-                generatedXenoDef.iconPath = DefDatabase<XenotypeIconDef>.AllDefs.RandomElement().texPath;
-                generatedXenoDef.descriptionShort = "A XenoDef with genes based on the rules defined in settings.";
+                generatedXenoDef = DiverseFactionGeneticsUtilities.GenerateProceduralXenotype();
             }
             var xenoChanceList = new List<XenotypeChance>();
             if (generatedXenoDef != null && generatedXenoDef.ConfigErrors().Count() == 0)
             {
-                if (DefDatabase<XenotypeDef>.AllDefs.Any(x => x.defName == generatedXenoDef.defName)) {
-                    generatedXenoDef.defName += "+";
-                    generatedXenoDef.label = generatedXenoDef.defName;
-                }
-                DefDatabase<XenotypeDef>.Add(generatedXenoDef);
                 xenoChanceList.Clear();
                 xenoChanceList.Add(new XenotypeChance(generatedXenoDef, 100f));
-                __result.def.xenotypeSet = new XenotypeSet();
-                Traverse.Create(__result.def.xenotypeSet).Field("xenotypeChances").SetValue(xenoChanceList);
+                parms.factionDef.xenotypeSet = new XenotypeSet();
+                Traverse.Create(parms.factionDef.xenotypeSet).Field("xenotypeChances").SetValue(xenoChanceList);
 
             }
             else {
@@ -89,10 +45,16 @@ namespace DiverseFactionGenetics
                 }
                 xenoChanceList.Clear();
                 xenoChanceList.Add(new XenotypeChance(XenotypeDefOf.Baseliner, 100));
-                __result.def.xenotypeSet = new XenotypeSet();
-                Traverse.Create(__result.def.xenotypeSet).Field("xenotypeChances").SetValue(xenoChanceList);
+                parms.factionDef.xenotypeSet = new XenotypeSet();
+                Traverse.Create(parms.factionDef.xenotypeSet).Field("xenotypeChances").SetValue(xenoChanceList);
             }
-                
+            FactionDef tempFacDef = DefDatabase<FactionDef>.GetNamed(parms.factionDef.defName);
+            Traverse.Create(tempFacDef.xenotypeSet).Field("xenotypeChances").SetValue(xenoChanceList);
+            var fa = Find.World.GetComponent<DiverseFactionGenetics_FactionAssociations>();
+            if (fa.associations == null) {
+                fa.associations = new Dictionary<string, string>();
+            }
+            fa.associations.Add(parms.factionDef.defName, generatedXenoDef.defName);
         }
         
     }

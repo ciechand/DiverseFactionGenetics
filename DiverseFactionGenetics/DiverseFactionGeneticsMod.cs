@@ -2,6 +2,8 @@
 using Verse;
 using RimWorld;
 using UnityEngine;
+using System.Security;
+using System.Collections.Generic;
 
 namespace DiverseFactionGenetics
 {
@@ -22,6 +24,13 @@ namespace DiverseFactionGenetics
         }
 
         public override string SettingsCategory() => "DiverseFactionGenetics";
+        public static string ModName => "DiverseFactionGenetics";
+
+        public static string cleanseWorldName(string worldName)
+        {
+            return worldName.Replace("'", "").Replace(" ", "-");
+        }
+   
 
     }
 }

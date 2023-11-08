@@ -12,7 +12,7 @@ namespace DiverseFactionGenetics
     public class Dialog_CreateGenePoolSettingsSection : Dialog_Rename
     {
         DFGGenePoolSettingsSection targetPool;
-        public Dialog_CreateGenePoolSettingsSection(DFGGenePoolSettingsSection genePool) { 
+        public Dialog_CreateGenePoolSettingsSection(ref DFGGenePoolSettingsSection genePool) { 
             targetPool = genePool;
             closeOnClickedOutside = false;
             doCloseX = false;

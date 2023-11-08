@@ -70,7 +70,7 @@ namespace DiverseFactionGenetics
             AddGenePoolDropdown(ref localSection);
 
             //Adding the percentage Chance Text Box
-            localSection.TextFieldNumericLabeled<float>("Percent Chance Per gene chosen will get added to the pool: ",ref chancePerGene, ref chanceBuffer, 0, 100);
+            localSection.TextFieldNumericLabeled<float>("Chance for gene to be added above the mininmum value: ",ref chancePerGene, ref chanceBuffer, 0, 100);
             
             //Adding the Slider to nominate the number of genes to generate
             Rect rect = localSection.GetRect(28f);
@@ -101,9 +101,13 @@ namespace DiverseFactionGenetics
                 foreach (CustomXenotype x in tempXenos.ToList()) {
                     fm.Add(new FloatMenuOption(x.name, delegate {
                         if (referenceXenotypeName != null) {
-                            chancePerGene = 0;
-                            chanceBuffer = "0";
-                            numberOfGenesToGenerate = new IntRange();
+                            if (numberOfGenesToGenerate.min > CachedXenotype.genes.Count())
+                            {
+                                numberOfGenesToGenerate.min = CachedXenotype.genes.Count();
+                                numberOfGenesToGenerate.max = CachedXenotype.genes.Count();
+                            } else if (numberOfGenesToGenerate.max > CachedXenotype.genes.Count()) {
+                                numberOfGenesToGenerate.max = CachedXenotype.genes.Count();
+                            }
                         }
                         CachedXenotype = x;
                     }));
