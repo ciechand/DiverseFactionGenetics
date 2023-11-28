@@ -30,7 +30,7 @@ namespace DiverseFactionGenetics
                     foreach (FileInfo item in GenFilePaths.AllCustomXenotypeFiles.OrderBy((FileInfo f) => f.LastWriteTime))
                     {
                         string filePath = GenFilePaths.AbsFilePathForXenotype(Path.GetFileNameWithoutExtension(item.Name));
-                        PreLoadUtility.CheckVersionAndLoad(filePath, ScribeMetaHeaderUtility.ScribeHeaderMode.Xenotype, delegate
+                        DiverseFactionGeneticsUtilities.LoadXenotypeFilesIgnoringModList(filePath, ScribeMetaHeaderUtility.ScribeHeaderMode.Xenotype, delegate
                         {
                             if (GameDataSaveLoader.TryLoadXenotype(filePath, out var xenotype))
                             {
@@ -39,7 +39,7 @@ namespace DiverseFactionGenetics
                             else {
                                 Log.Error($"Failed to load xenotype: {item.Name}");
                             }
-                        }, skipOnMismatch: true);
+                        });
                     }
                 }
                 return cachedXenos;

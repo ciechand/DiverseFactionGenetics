@@ -38,7 +38,7 @@ namespace DiverseFactionGenetics
         public string referenceXenotypeName;
         public float chancePerGene;
         private string chanceBuffer;
-        public IntRange numberOfGenesToGenerate;
+        public IntRange numberOfGenesToGenerate = new IntRange(1,1);
 
         public string genePoolName;
 
@@ -74,15 +74,15 @@ namespace DiverseFactionGenetics
             
             //Adding the Slider to nominate the number of genes to generate
             Rect rect = localSection.GetRect(28f);
-            int maxCount = (referenceXenotypeName == null) ? 0: CachedXenotype.genes.Count();
-            Widgets.IntRange(rect, depth+1, ref numberOfGenesToGenerate,0, maxCount);
+            int maxCount = (referenceXenotypeName == null) ? 1: CachedXenotype.genes.Count();
+            Widgets.IntRange(rect, depth+1, ref numberOfGenesToGenerate,1, maxCount);
 
 
             SettingsView.EndSection(localSection);
         }
 
         public void AddGenePoolDropdown(ref Listing_Standard SettingsView) {
-            if (SettingsView.ButtonText(referenceXenotypeName, "This Xenotpye will specify the pool of genes that this section will pull from.")) {
+            if (SettingsView.ButtonText(referenceXenotypeName, "This Xenotype will specify the pool of genes that this section will pull from.")) {
                 
                 //Adding a Menu option for editing the selected xenotype
                 string LabelForEditOption = (referenceXenotypeName == null) ? "Create New GenePool": "Edit Selected GenePool";

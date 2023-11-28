@@ -13,48 +13,54 @@ namespace DiverseFactionGenetics
 {
     public class DiverseFactionGeneticsUtilities
     {
+
+        private static readonly int maxRerolls = 20;
         private static DiverseFactionGeneticsSettings settings => LoadedModManager.GetMod<DiverseFactionGeneticsMod>().Settings;
 
         public static XenotypeDef GenerateProceduralXenotype()
         {
             var generatedXenoDef = new XenotypeDef();
-            foreach (var pool in settings.genePools)
+            Tuple<XenotypeDef, int> closestXeno = null;
+            for(int j=0; j< maxRerolls; j++)
             {
-                if (pool.CachedXenotype != null)
+                generatedXenoDef = new XenotypeDef();
+                foreach (var pool in settings.genePools)
                 {
-                    var genesToGen = Rand.RangeInclusive(pool.numberOfGenesToGenerate.min, pool.numberOfGenesToGenerate.max);
-                    List<GeneDef> copyOfPool = new List<GeneDef>();
-                    for (int i=0; i<15; i++) {
-                        copyOfPool = pool.CachedXenotype.genes.TakeRandom(genesToGen).ToList();
-                        var totalMeta = copyOfPool.Aggregate(0,(totalmeta, nextGene) => totalmeta += nextGene.biostatMet);
-                        if (totalMeta >= -3 && totalMeta <= 3) {
-                            break;
-                        }
-                    }
-                    if (copyOfPool.Count == 0) {
-                        Log.Error($"[DiverserFactionGenetics] HOW IS THE GENE POOL for {pool.referenceXenotypeName} EMPTY?!?!?!?");
-                    }
-                    for (int i = 1; i <= genesToGen; i++)
+                    if (pool == null)
                     {
-                        if (i < pool.numberOfGenesToGenerate.min || (i >= pool.numberOfGenesToGenerate.min && Rand.Range(0, 101) <= pool.chancePerGene))
+                        Log.Error("Gene Pool is null.");
+                    }
+                    if (pool.CachedXenotype != null && pool.CachedXenotype.genes != null)
+                    {
+                        var genesToGen = Rand.RangeInclusive(pool.numberOfGenesToGenerate.min, pool.numberOfGenesToGenerate.max);
+                        if (genesToGen == 0 || pool.CachedXenotype.genes.Count == 0)
                         {
-                            bool conflict = false;
-                            GeneDef gene = copyOfPool.RandomElement();
-                            foreach (GeneDef g in generatedXenoDef.genes)
+                            continue;
+                        }
+                        List<GeneDef> cachedPool = pool.CachedXenotype.genes.ToList();
+
+                        for (int i = 0; i < genesToGen; i++)
+                        {
+                            if (i >= pool.numberOfGenesToGenerate.min-1 && Rand.RangeInclusive(0, 100) >= pool.chancePerGene) {
+                                continue;
+                            }
+                            if (cachedPool.Count == 0)
+                            {
+                                Log.Error($"[DiverserFactionGenetics] HOW IS THE GENE POOL for {pool.referenceXenotypeName} EMPTY?!?!?!?");
+                                Log.Error($"Tried to generate {genesToGen} genes, but only got to {i}");
+                                break;
+                            }
+                            GeneDef gene = cachedPool.RandomElement();
+                            generatedXenoDef.genes.Add(gene);
+                            cachedPool.Remove(gene);
+                            var copyOfPool = cachedPool.ToList();
+                            foreach (GeneDef g in copyOfPool)
                             {
                                 if (gene.ConflictsWith(g))
                                 {
-                                    conflict = true;
+                                    cachedPool.Remove(g);
                                 }
                             }
-                            if (!conflict)
-                            {
-                                generatedXenoDef.genes.Add(gene);
-                            }
-                            else {
-                                i--;
-                            }
-                            copyOfPool.Remove(gene);
                             if (gene.prerequisite != null && !generatedXenoDef.genes.Any(g => gene.prerequisite == g))
                             {
                                 generatedXenoDef.genes.Add(gene.prerequisite);
@@ -65,10 +71,34 @@ namespace DiverseFactionGenetics
                             }
                         }
                     }
+                    else
+                    {
+                        Log.Error("Cached XenoType is null");
+                    }
+                }
+                int totalMetaAbs = Math.Abs(generatedXenoDef.AllGenes.Aggregate(0, (totalmeta, nextGene) => totalmeta += nextGene.biostatMet));
+                if (totalMetaAbs > 4)
+                {
+                    if (closestXeno == null)
+                    {
+                        closestXeno = new Tuple<XenotypeDef, int>(generatedXenoDef, totalMetaAbs);
+                    }
+                    else {
+                        if (totalMetaAbs < closestXeno.Item2) {
+                            closestXeno = new Tuple<XenotypeDef, int>(generatedXenoDef, totalMetaAbs);
+                        }
+                    }
+                    if (j == maxRerolls-1) {
+                        generatedXenoDef = closestXeno.Item1;
+                    }
+                    //Log.Error($"generated metabolism is outside the allowed values: {totalMetaAbs}");
+                }
+                else {
+                    break;
                 }
             }
             string name = GeneUtility.GenerateXenotypeNameFromGenes(generatedXenoDef.genes);
-            generatedXenoDef.defName = DiverseFactionGeneticsMod.cleanseWorldName(Find.World.info.name)+"_"+DiverseFactionGeneticsMod.cleanseWorldName(name);
+            generatedXenoDef.defName = DiverseFactionGeneticsMod.cleanseWorldName(Find.World.info.name) + "_" + DiverseFactionGeneticsMod.cleanseWorldName(name);
             generatedXenoDef.label = name;
             generatedXenoDef.inheritable = true;
             generatedXenoDef.iconPath = DefDatabase<XenotypeIconDef>.AllDefs.RandomElement().texPath;
@@ -93,11 +123,27 @@ namespace DiverseFactionGenetics
                     xElement2.Add(new XElement("li", gene.defName));
                 }
                 doc.Element("Defs").Add(xElement);
-                doc.Save(Path.Combine(directoryPath, generatedXenoDef.defName+".xml"));
+                doc.Save(Path.Combine(directoryPath, generatedXenoDef.defName + ".xml"));
                 DefDatabase<XenotypeDef>.Add(generatedXenoDef);
             }
             return generatedXenoDef;
 
+        }
+
+        public static void LoadXenotypeFilesIgnoringModList(string path, ScribeMetaHeaderUtility.ScribeHeaderMode mode, Action loadAct)
+        {
+            try
+            {
+                Scribe.loader.InitLoadingMetaHeaderOnly(path);
+                ScribeMetaHeaderUtility.LoadGameDataHeader(mode, logVersionConflictWarning: false);
+                Scribe.loader.FinalizeLoading();
+            }
+            catch (Exception ex)
+            {
+                Log.Warning("Exception loading " + path + ": " + ex);
+                Scribe.ForceStop();
+            }
+            loadAct();
         }
     }
 }
