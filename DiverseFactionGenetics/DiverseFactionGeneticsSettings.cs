@@ -82,7 +82,6 @@ namespace DiverseFactionGenetics
             if (SettingsView.ButtonImage(addTex, 20, 20)) {
                 //This needs FIXED
                 var tempGenePool = new DFGGenePoolSettingsSection();
-                Find.WindowStack.Add(new Dialog_CreateGenePoolSettingsSection(ref tempGenePool));
                 genePools.Add(tempGenePool);
             }
             generalSettingsHeight = SettingsView.CurHeight;

@@ -6,6 +6,7 @@
   <description>Allows Customization of the genetic generation algorithm.</description>
   <supportedVersions>
     <li>1.4</li>
+    <li>1.5</li>
   </supportedVersions>
   <modDependencies>
     <li>

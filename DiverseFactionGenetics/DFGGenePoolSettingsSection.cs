@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 
 namespace DiverseFactionGenetics
 {
-    public class DFGGenePoolSettingsSection : IExposable
+    public class DFGGenePoolSettingsSection : IExposable, IRenameable
     {
         private CustomXenotype cachedXenotype;
         public CustomXenotype CachedXenotype
@@ -35,12 +35,28 @@ namespace DiverseFactionGenetics
                 }
             }
         }
+
+
+        public string BaseLabel => "";
+
+        public string InspectLabel => "";
+
         public string referenceXenotypeName;
         public float chancePerGene;
         private string chanceBuffer;
         public IntRange numberOfGenesToGenerate = new IntRange(1,1);
 
-        public string genePoolName;
+        private string saveableLabel;
+        public string RenamableLabel {
+            get 
+            {
+                return saveableLabel;
+            }
+            set 
+            {
+                saveableLabel = value;
+            }
+        }
 
         public DFGGenePoolSettingsSection()
         {
@@ -60,9 +76,9 @@ namespace DiverseFactionGenetics
             localSection.Gap(-(20f+2f));
             localSection.Indent(24f);
             localSection.ColumnWidth -= 24;
-            string tempStr = localSection.TextEntry(genePoolName);
+            string tempStr = localSection.TextEntry(RenamableLabel);
             //Perhaps we need more validation here eventually?
-            genePoolName = tempStr;
+            RenamableLabel = tempStr;
             localSection.ColumnWidth += 24;
             localSection.Outdent(24f);
 
@@ -118,7 +134,7 @@ namespace DiverseFactionGenetics
 
         public void ExposeData()
         {
-            Scribe_Values.Look<string>(ref genePoolName, "GenePoolName");
+            Scribe_Values.Look<string>(ref saveableLabel, "GenePoolName");
             Scribe_Values.Look<string>(ref referenceXenotypeName, "referenceXenotypeName");
             Scribe_Values.Look<float>(ref chancePerGene, "chancePerGene");
             Scribe_Values.Look<IntRange>(ref numberOfGenesToGenerate, "numberOfGenesToGenerate");

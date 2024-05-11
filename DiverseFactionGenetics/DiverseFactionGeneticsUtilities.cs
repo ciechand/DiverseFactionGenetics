@@ -51,6 +51,11 @@ namespace DiverseFactionGenetics
                                 break;
                             }
                             GeneDef gene = cachedPool.RandomElement();
+                            if (generatedXenoDef.AllGenes.Any(g => g.ConflictsWith(gene)))
+                            {
+                                cachedPool.Remove(gene);
+                                continue;
+                            }
                             generatedXenoDef.genes.Add(gene);
                             cachedPool.Remove(gene);
                             var copyOfPool = cachedPool.ToList();

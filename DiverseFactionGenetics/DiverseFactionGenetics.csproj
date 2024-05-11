@@ -44,7 +44,6 @@
     <Compile Include="NewGeneratedFactionPatch.cs" />
     <Compile Include="Dialog_CustomXenotypeEditor.cs" />
     <Compile Include="DFGGenePoolSettingsSection.cs" />
-    <Compile Include="Dialog_CreateGenePoolSettingsSection.cs" />
     <Compile Include="DiverseFactionGeneticsMod.cs" />
     <Compile Include="DiverseFactionGeneticsSettings.cs" />
     <Compile Include="GenerateGenesPatch.cs" />
@@ -54,10 +53,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Krafs.Rimworld.Ref">
-      <Version>1.4.3704</Version>
+      <Version>1.5.4085</Version>
     </PackageReference>
     <PackageReference Include="Lib.Harmony">
-      <Version>2.2.2</Version>
+      <Version>2.3.3</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
