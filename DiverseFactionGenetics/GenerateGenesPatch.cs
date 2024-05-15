@@ -16,7 +16,7 @@ namespace DiverseFactionGenetics
         [HarmonyPrefix]
         public static bool PreFix(Pawn pawn, XenotypeDef xenotype, PawnGenerationRequest request) {
             settings = LoadedModManager.GetMod<DiverseFactionGeneticsMod>().Settings;
-            if (settings.genePools.Count == 0)
+            if (settings.genePools.Count == 0 || request.AllowedDevelopmentalStages == DevelopmentalStage.Newborn)
             {
                 return true;
             }
@@ -26,7 +26,7 @@ namespace DiverseFactionGenetics
         [HarmonyPostfix]
         public static void PostFix(Pawn pawn, XenotypeDef xenotype, PawnGenerationRequest request)
         {
-            if (pawn.genes == null)
+            if (pawn.genes == null || request.AllowedDevelopmentalStages == DevelopmentalStage.Newborn)
             {
                 return;
             }

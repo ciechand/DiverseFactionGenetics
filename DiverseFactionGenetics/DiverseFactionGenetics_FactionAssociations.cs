@@ -40,6 +40,8 @@ namespace DiverseFactionGenetics
                         new XenotypeChance(DefDatabase<XenotypeDef>.GetNamed(xeno),100)
                     };
                     Traverse.Create(f.xenotypeSet).Field("xenotypeChances").SetValue(xenoChanceList);
+                    
+                    
                 }
             }
         }

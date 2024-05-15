@@ -38,6 +38,7 @@
     <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ChooseOrGenerateIdeoPatch.cs" />
     <Compile Include="GenerateTraitsPatch.cs" />
     <Compile Include="DiverseFactionGeneticsUtilities.cs" />
     <Compile Include="DiverseFactionGenetics_FactionAssociations.cs" />
